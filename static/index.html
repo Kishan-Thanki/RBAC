@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RBAC System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            background: #333;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .login-form {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+
+        .dashboard {
+            display: none;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        .tab.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .alert {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .user-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 3px;
+            margin-bottom: 20px;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            float: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>RBAC System</h1>
+            <p>Simple User Management System</p>
+        </div>
+
+        <div class="content">
+            <!-- Login Form -->
+            <div id="loginSection" class="login-form">
+                <h2>Login</h2>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn">Login</button>
+                </form>
+                <p style="margin-top: 20px; text-align: center;">
+                    Default admin: admin@example.com / admin123
+                </p>
+            </div>
+
+            <!-- Dashboard -->
+            <div id="dashboard" class="dashboard">
+                <div class="user-info">
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                    <h3>Welcome, <span id="username">User</span>!</h3>
+                    <p>Roles: <span id="userRoles">-</span></p>
+                    <p>Permissions: <span id="userPermissions">-</span></p>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('dashboard')">Dashboard</button>
+                    <button class="tab" onclick="showTab('users')">Users</button>
+                    <button class="tab" onclick="showTab('roles')">Roles</button>
+                    <button class="tab" onclick="showTab('permissions')">Permissions</button>
+                    <button class="tab" onclick="showTab('api')">API Test</button>
+                </div>
+
+                <!-- Dashboard Tab -->
+                <div id="dashboardTab" class="tab-content active">
+                    <h3>System Overview</h3>
+                    <p>This is a simple RBAC (Role-Based Access Control) system.</p>
+                    <p>Use the tabs above to manage users, roles, and permissions.</p>
+                </div>
+
+                <!-- Users Tab -->
+                <div id="usersTab" class="tab-content">
+                    <h3>User Management</h3>
+                    <button class="btn" onclick="loadUsers()">Load Users</button>
+                    <div id="usersList"></div>
+                </div>
+
+                <!-- Roles Tab -->
+                <div id="rolesTab" class="tab-content">
+                    <h3>Role Management</h3>
+                    <button class="btn" onclick="loadRoles()">Load Roles</button>
+                    <div id="rolesList"></div>
+                </div>
+
+                <!-- Permissions Tab -->
+                <div id="permissionsTab" class="tab-content">
+                    <h3>Permission Management</h3>
+                    <button class="btn" onclick="loadPermissions()">Load Permissions</button>
+                    <div id="permissionsList"></div>
+                </div>
+
+                <!-- API Test Tab -->
+                <div id="apiTab" class="tab-content">
+                    <h3>API Testing</h3>
+                    <button class="btn" onclick="testEndpoint('user-dashboard')">Test User Dashboard</button>
+                    <button class="btn" onclick="testEndpoint('admin-only')">Test Admin Only</button>
+                    <button class="btn" onclick="testEndpoint('manage-users')">Test Manage Users</button>
+                    <div id="apiResults"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let accessToken = null;
+        let currentUser = null;
+        const API_BASE = 'http://localhost:8000/api/v1';
+
+        // Check if user is logged in
+        function checkAuth() {
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                accessToken = token;
+                loadUserInfo();
+                showDashboard();
+            } else {
+                showLogin();
+            }
+        }
+
+        // Show login form
+        function showLogin() {
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'none';
+        }
+
+        // Show dashboard
+        function showDashboard() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+        }
+
+        // Show specific tab
+        function showTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabId + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    accessToken = data.access_token;
+                    localStorage.setItem('access_token', data.access_token);
+                    loadUserInfo();
+                    showDashboard();
+                    showAlert('Login successful!', 'success');
+                } else {
+                    showAlert(data.detail || 'Login failed', 'error');
+                }
+            } catch (error) {
+                showAlert('Login failed: ' + error.message, 'error');
+            }
+        });
+
+        // Load user information
+        async function loadUserInfo() {
+            try {
+                const response = await fetch(`${API_BASE}/protected/user-dashboard`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    currentUser = data.user;
+                    
+                    document.getElementById('username').textContent = currentUser.username;
+                    document.getElementById('userRoles').textContent = currentUser.roles.join(', ') || 'None';
+                    document.getElementById('userPermissions').textContent = data.permissions.join(', ') || 'None';
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+            }
+        }
+
+        // Load users
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/users`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const users = await response.json();
+                    const usersList = document.getElementById('usersList');
+                    usersList.innerHTML = '<h4>Users:</h4><ul>' + 
+                        users.map(user => `<li>${user.username} (${user.email})</li>`).join('') + 
+                        '</ul>';
+                } else {
+                    showAlert('Failed to load users', 'error');
+                }
+            } catch (error) {
+                showAlert('Error loading users: ' + error.message, 'error');
+            }
+        }
+
+        // Load roles
+        async function loadRoles() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/roles`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const roles = await response.json();
+                    const rolesList = document.getElementById('rolesList');
+                    rolesList.innerHTML = '<h4>Roles:</h4><ul>' + 
+                        roles.map(role => `<li>${role.name} - ${role.description}</li>`).join('') + 
+                        '</ul>';
+                } else {
+                    showAlert('Failed to load roles', 'error');
+                }
+            } catch (error) {
+                showAlert('Error loading roles: ' + error.message, 'error');
+            }
+        }
+
+        // Load permissions
+        async function loadPermissions() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/permissions`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const permissions = await response.json();
+                    const permissionsList = document.getElementById('permissionsList');
+                    permissionsList.innerHTML = '<h4>Permissions:</h4><ul>' + 
+                        permissions.map(perm => `<li>${perm.name} - ${perm.description}</li>`).join('') + 
+                        '</ul>';
+                } else {
+                    showAlert('Failed to load permissions', 'error');
+                }
+            } catch (error) {
+                showAlert('Error loading permissions: ' + error.message, 'error');
+            }
+        }
+
+        // Test API endpoints
+        async function testEndpoint(endpoint) {
+            try {
+                const response = await fetch(`${API_BASE}/protected/${endpoint}`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+
+                const data = await response.json();
+                const apiResults = document.getElementById('apiResults');
+                
+                if (response.ok) {
+                    apiResults.innerHTML = `<div class="alert alert-success">
+                        <strong>${endpoint}:</strong> ${data.message}
+                    </div>`;
+                } else {
+                    apiResults.innerHTML = `<div class="alert alert-error">
+                        <strong>${endpoint}:</strong> ${data.detail}
+                    </div>`;
+                }
+            } catch (error) {
+                const apiResults = document.getElementById('apiResults');
+                apiResults.innerHTML = `<div class="alert alert-error">
+                    <strong>${endpoint}:</strong> Error: ${error.message}
+                </div>`;
+            }
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem('access_token');
+            accessToken = null;
+            currentUser = null;
+            showLogin();
+        }
+
+        // Show alert message
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            
+            const content = document.querySelector('.content');
+            content.insertBefore(alertDiv, content.firstChild);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+        });
+    </script>
+</body>
+</html> 
